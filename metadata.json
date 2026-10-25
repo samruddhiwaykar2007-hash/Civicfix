@@ -1,0 +1,11 @@
+{
+  "name": "CivicFix — AI Civic Complaint & Accountability Platform",
+  "description": "Report It. Track It. Get It Resolved. AI-powered multilingual civic complaint reporting, automatic department routing, real-time tracking, escalation workflow, and resolution audit trail.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

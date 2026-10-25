@@ -1,0 +1,681 @@
+# Build CivicFix — AI-Powered Civic Complaint & Accountability Platform
+
+Build a complete, polished, responsive web application named **CivicFix** with the tagline:
+
+**“Report It. Track It. Get It Resolved.”**
+
+CivicFix enables citizens to report local civic problems through photographs, GPS-based locations, and natural-language descriptions. AI understands the complaint, suggests the appropriate category and municipal department, and helps citizens submit a structured report. Citizens can then track progress, see a transparent action history, and escalate overdue complaints according to configured rules.
+
+This is the citizen-facing application for a larger civic-tech platform. Architect it so department officer portals, supervisor dashboards, municipal administration, and analytics can be added later without rebuilding the core system.
+
+Build a functional application, not merely a landing page, static dashboard, or chatbot.
+
+---
+
+## 1. Product objectives
+
+Solve five important problems:
+
+1. Citizens struggle to identify the correct department for a civic complaint.
+2. Formal complaint forms can be confusing, especially for citizens who are more comfortable speaking or writing in Marathi or Hindi.
+3. Citizens often lack transparent information about what happens after a complaint is submitted.
+4. Complaints may remain unacknowledged or overdue without a visible escalation mechanism.
+5. There may be no clear, reliable record of who performed an action, when it occurred, and why.
+
+CivicFix should make the reporting experience simple while making the complaint lifecycle transparent and auditable.
+
+## 2. Technology stack
+
+Use the following architecture:
+
+- Frontend: React, TypeScript, and Vite.
+- Styling: Tailwind CSS or an equivalent maintainable styling system.
+- Icons: Lucide React.
+- Charts: Recharts when analytics are needed.
+- AI: Google Gemini using the secure integration supported by Google AI Studio.
+- Backend and database: Supabase.
+- Authentication: Supabase Auth.
+- Database: Supabase PostgreSQL.
+- Image storage: a private Supabase Storage bucket.
+- Authorization: Supabase Row Level Security (RLS).
+- Maps and location: browser Geolocation API with a manual location fallback and a map interface if an appropriate map provider is configured.
+
+Use current, compatible dependencies. Inspect the available project environment before making architectural decisions.
+
+Do not expose Gemini API keys, Supabase service-role keys, or other secrets in client-side code. Use supported server-side functions, such as Supabase Edge Functions, for privileged operations and protected AI calls where appropriate.
+
+If credentials or external integrations are unavailable, keep the application runnable in demo mode and clearly explain what needs configuration. Never pretend a real integration is connected when it is not.
+
+## 3. Visual design and user experience
+
+Create a beautiful, modern, trustworthy civic-service interface.
+
+Color palette:
+- Primary: light blue.
+- Secondary: soft green.
+- Background: white and very pale blue.
+- Primary text: dark navy for readability.
+- Success: green.
+- Warning: amber.
+- Overdue or critical: red, used sparingly.
+
+Use generous whitespace, readable typography, rounded cards, subtle borders, clear labels, and restrained animations.
+
+Avoid excessive gradients, oversized headings, dense tables on mobile, and unnecessary glassmorphism.
+
+Design for citizens with different levels of digital literacy. Use simple language, recognizable icons, large touch targets, clear instructions, accessible contrast, and obvious next steps.
+
+The interface must work on mobile phones, tablets, and desktops.
+
+On mobile, use a simple bottom navigation or compact navigation. On desktop, use a clean sidebar or top navigation.
+
+Display the CivicFix brand consistently.
+
+## 4. Authentication and citizen accounts
+
+Require login before a citizen can submit a complaint or access private complaint history.
+
+Implement:
+- Sign-up.
+- Login.
+- Logout.
+- Session persistence.
+- Password reset.
+- Clear authentication errors.
+- Protected application routes.
+- A profile page.
+
+Use Supabase Auth when configured.
+
+Keep registration fields minimal:
+- Display name.
+- Email address.
+- Password.
+- Preferred language.
+
+Do not require a phone number unless a real, configured verification workflow requires it.
+
+Support a citizen's preferred interface language: Marathi, Hindi, or English.
+
+Users must only be able to access their own private profile, complaint details, and uploaded private images. A tracking ID alone must not grant access to another person's complaint.
+
+If Supabase credentials are unavailable, provide a clearly labelled demo sign-in path with sample data. Never simulate a successful real account registration.
+
+## 5. Multilingual interface and NLP
+
+Support three languages from the beginning:
+
+1. Marathi — मराठी
+2. Hindi — हिन्दी
+3. English
+
+Place a visible language selector on the welcome screen, login screen, and main application navigation.
+
+Translate all essential interface elements, form labels, instructions, validation messages, button labels, complaint statuses, and confirmation screens into all three languages.
+
+Do not merely translate the homepage. Maintain consistent translations throughout the application.
+
+Implement multilingual complaint understanding using Gemini:
+- Accept Marathi, Hindi, and English descriptions.
+- Detect the likely input language.
+- Interpret colloquial wording, spelling mistakes, and mixed-language sentences where supported.
+- Normalize the description into a structured complaint.
+- Generate a clear summary.
+- Preserve the citizen's original description.
+- Provide a standardized internal description for routing and review.
+- Display AI-generated summaries in the citizen's selected language.
+- Let citizens correct the AI's interpretation before submission.
+
+Never require citizens to write in English.
+
+Keep the original and normalized descriptions separately. Translation must not silently change the reported facts.
+
+## 6. Citizen home screen
+
+After login, display a friendly home screen with three primary actions:
+
+1. **Report an Issue**
+2. **Track My Complaints**
+3. **My Complaints**
+
+Also include:
+- A concise explanation of how CivicFix works.
+- A count of the citizen's open complaints.
+- Recent complaint updates.
+- A language selector.
+- A privacy notice.
+- A helpful empty state for first-time users.
+
+Avoid overwhelming the user with analytics or administrative terminology.
+
+## 7. AI-powered complaint registration
+
+This is the central feature of CivicFix.
+
+Create a guided reporting flow with a clear progress indicator.
+
+### Step 1: Capture the issue
+
+Provide a prominent camera action for capturing a photograph and an upload option for an existing image.
+
+On supported devices, use the camera through an appropriate browser input or camera interface. On desktop, allow file selection.
+
+Show the image preview and allow the citizen to replace or remove it.
+
+Request location permission when the citizen starts reporting or when location capture is needed.
+
+If permission is granted, capture GPS coordinates and show the citizen the detected location. Let the citizen correct or confirm it.
+
+If GPS is unavailable, denied, inaccurate, or unsupported, offer manual address entry and map-pin selection when mapping is configured.
+
+Clearly distinguish:
+- GPS coordinates captured by the browser.
+- A manually entered address.
+- A location that has not yet been confirmed.
+
+Never invent coordinates or imply that location access succeeded when it did not.
+
+### Step 2: Understand the complaint with AI
+
+Allow the citizen to enter a short description in Marathi, Hindi, or English.
+
+Examples:
+- “या रस्त्यावर मोठा खड्डा आहे.”
+- “यहाँ नाली का पानी सड़क पर बह रहा है।”
+- “The streetlight outside our building has stopped working.”
+
+Provide an optional action labelled “Help me describe this issue.”
+
+Use Gemini to analyze both the uploaded photograph and the citizen's description.
+
+Request structured output with:
+- Suggested issue title.
+- Suggested category.
+- Detailed but concise description.
+- Visible evidence in the image.
+- Suggested severity: Low, Medium, High, or Critical.
+- Confidence score or confidence band.
+- Suggested responsible department.
+- Short explanation of the category and department selection.
+- Any important missing information.
+- Suggested next step.
+
+Support categories such as:
+- Roads and potholes.
+- Garbage and sanitation.
+- Drainage and sewage.
+- Water supply and leakage.
+- Streetlights and public lighting.
+- Public infrastructure damage.
+- Public food-safety concerns.
+- Other civic issues.
+
+The category list must be configurable so the system can expand later.
+
+The AI must distinguish visible evidence from assumptions. For example, it may identify visible waste but should not assert a health violation solely from an image.
+
+If the image and text disagree, the confidence is low, or the category is unclear, ask one simple clarifying question instead of generating an overconfident conclusion.
+
+Do not force the citizen to answer unnecessary questions.
+
+If the image is unreadable or the AI service fails, preserve the entered data and let the citizen choose a category manually.
+
+### Step 3: AI-first category and department suggestion
+
+The AI should suggest the category and responsible department first.
+
+Display the result in a simple review card:
+- “We think this is a road problem.”
+- “Suggested department: Roads and Public Works.”
+- “Reason: The image and description indicate road-surface damage.”
+
+Allow the citizen to:
+- Confirm the suggestion.
+- Change the category.
+- Edit the description.
+- Correct the location.
+- Request another analysis when appropriate.
+
+Do not silently submit AI-generated information without the citizen's confirmation.
+
+Implement department routing through configurable, deterministic rules after AI interpretation. AI provides the recommendation; the configured routing rules determine the actual destination.
+
+If a real department directory is unavailable, label department assignments as suggested or simulated. Do not claim a complaint has been delivered to a real municipal authority without a working integration.
+
+### Step 4: Final review and submission
+
+Before submission, show a clear summary:
+- Photograph.
+- Complaint title.
+- Original description.
+- Standardized description.
+- Selected category.
+- Suggested or configured department.
+- Location.
+- Severity.
+- Privacy information.
+
+The citizen explicitly presses **Submit Complaint** to create the complaint.
+
+Do not automatically submit after AI analysis.
+
+Validate the required fields and preserve the draft if submission fails.
+
+### Step 5: Confirmation
+
+After successful database insertion, display:
+- A unique complaint reference ID.
+- Submission date and time.
+- Initial status.
+- Category.
+- Location summary.
+- A button to open the tracking timeline.
+
+Generate the reference ID through a reliable backend mechanism that prevents collisions.
+
+Create the complaint, initial status, and audit event consistently. Avoid showing success if the database transaction fails.
+
+## 8. Complaint tracking
+
+Create a dedicated tracking experience for each complaint.
+
+Display a visual timeline with events such as:
+- Complaint submitted.
+- Complaint received by the system.
+- Department suggested or assigned.
+- Acknowledgement received.
+- Complaint under review.
+- Work started.
+- Additional information requested.
+- Resolution submitted.
+- Resolution confirmed or disputed.
+- Complaint escalated.
+
+Only show events that actually exist in the database or are clearly labelled sample events in demo mode.
+
+Every event should include a timestamp and a concise, understandable explanation.
+
+Show the current status, last update, configured response deadline when available, and the next expected step.
+
+Allow the citizen to filter complaints by:
+- All.
+- Submitted.
+- Under Review.
+- In Progress.
+- Resolved.
+- Overdue or Escalated.
+
+Provide search by complaint ID and relevant complaint title.
+
+The tracking page must update from persisted data, not merely hardcoded frontend states.
+
+Where realtime subscriptions are configured, use Supabase Realtime to reflect new updates. Otherwise, implement a sensible refresh or re-fetch mechanism.
+
+## 9. Escalation and accountability
+
+Implement an extensible escalation workflow.
+
+Create configurable escalation rules containing:
+- Complaint category.
+- Responsible authority or department.
+- Expected acknowledgement time.
+- Expected action or resolution window, where defined.
+- Escalation level.
+- Next authority.
+- Eligibility conditions.
+- Escalation reason.
+
+Do not invent official government deadlines. Use clearly labelled demo values until valid rules are configured.
+
+Detect overdue complaints using persisted timestamps and configured deadlines. Do not rely only on a browser timer or the citizen keeping the application open.
+
+Use a server-side scheduled process or equivalent supported backend mechanism for deadline checks when configured. For a prototype without scheduled infrastructure, calculate overdue eligibility from stored timestamps when loading the complaint and explain the limitation.
+
+Provide an escalation option when the configured conditions are met.
+
+For example:
+- Level 1: responsible department.
+- Level 2: supervising officer.
+- Level 3: higher municipal authority.
+
+The actual hierarchy must be configurable.
+
+When escalation occurs:
+- Record the reason.
+- Record the previous and next levels.
+- Record the timestamp.
+- Create an audit event.
+- Update the complaint's escalation status.
+- Show the new status in the citizen timeline.
+
+Distinguish clearly between:
+- No acknowledgement received.
+- Response deadline missed.
+- Action delayed.
+- Citizen requested escalation.
+- Escalation formally recorded.
+
+Never infer that an officer deliberately ignored a complaint solely because a deadline passed.
+
+The citizen must be able to see which stage is overdue and what escalation action is available.
+
+If no official escalation integration exists, label the action as a recorded escalation within CivicFix, not a guaranteed notification to a government official.
+
+## 10. Resolution verification
+
+When a complaint is marked as resolved by an authorized actor in a configured workflow, show the resolution details and any supporting evidence.
+
+Allow the citizen to:
+- Confirm that the issue is resolved.
+- Report that the issue persists.
+- Add a short follow-up description.
+- Upload a follow-up image where supported.
+
+Record the citizen's response in the audit history.
+
+If the citizen disputes the resolution, reopen the complaint or create a review request according to configurable rules. Preserve the previous history.
+
+Do not allow an unverified frontend action to masquerade as an official municipal resolution.
+
+## 11. Audit trail
+
+Create a structured audit log for important complaint lifecycle events.
+
+Record:
+- Event ID.
+- Complaint ID.
+- Actor ID, where available.
+- Actor role.
+- Action type.
+- Previous state.
+- New state.
+- Timestamp generated by the trusted backend.
+- Reason or comment, when applicable.
+- Escalation level, where applicable.
+- Relevant metadata without unnecessary personal information.
+
+Events include:
+- Complaint created.
+- Image uploaded or replaced.
+- Category confirmed or corrected.
+- Department assignment recorded.
+- Status changed.
+- Acknowledgement recorded.
+- Deadline missed.
+- Escalation requested or recorded.
+- Resolution submitted.
+- Resolution disputed.
+- Complaint closed or reopened.
+
+Design the audit log as append-only for ordinary users. Citizens must not be able to edit or delete audit events. Future officer and administrator interfaces must also use controlled backend operations rather than allowing direct arbitrary edits.
+
+Use database permissions and backend validation to protect the log. A UI that merely hides the delete button is not sufficient.
+
+Avoid recording passwords, authentication tokens, secret keys, or unnecessary personal data in logs.
+
+## 12. Supabase database design
+
+Create a maintainable relational schema and provide SQL migrations or setup instructions.
+
+At minimum, design these tables:
+
+### profiles
+- id, matching the authenticated user.
+- display_name.
+- preferred_language.
+- created_at.
+- updated_at.
+
+### complaints
+- id.
+- public_reference_id.
+- citizen_id.
+- title.
+- original_description.
+- normalized_description.
+- original_language.
+- category_id.
+- citizen_confirmed_category.
+- suggested_department_id.
+- assigned_department_id, nullable until actual routing is configured.
+- severity.
+- AI confidence metadata.
+- latitude and longitude, when available.
+- address.
+- location_source.
+- status.
+- created_at.
+- updated_at.
+- acknowledgement_deadline, if configured.
+- resolution_deadline, if configured.
+- escalated_at, if applicable.
+- closed_at, if applicable.
+
+### complaint_attachments
+- id.
+- complaint_id.
+- storage_path.
+- content_type.
+- file_size.
+- uploaded_at.
+- attachment_type.
+
+### complaint_events
+- id.
+- complaint_id.
+- actor_id, where applicable.
+- event_type.
+- previous_state.
+- new_state.
+- description.
+- metadata.
+- created_at.
+
+### departments
+- id.
+- name.
+- supported_categories.
+- active.
+- created_at.
+
+### escalation_rules
+- id.
+- category_id or applicable category rules.
+- source_level.
+- destination_level.
+- acknowledgement_duration.
+- resolution_duration, when defined.
+- active.
+- configuration metadata.
+
+Adapt the schema where needed for valid foreign keys, normalization, indexes, data integrity, and safe concurrency.
+
+Use server-generated timestamps and unique reference IDs.
+
+Provide appropriate indexes for citizen complaint history, status, category, reference ID, and deadline processing.
+
+Do not insert fake officer accounts or real government contact details.
+
+## 13. Supabase security and privacy
+
+Implement and document Row Level Security.
+
+Requirements:
+- An authenticated citizen can read their own private complaints.
+- A citizen cannot change another citizen's complaint.
+- Citizens cannot assign departments or impersonate officers.
+- Citizens cannot arbitrarily change official status fields or manufacture audit events.
+- Attachment access is controlled and private by default.
+- Storage paths and authorization are validated.
+- All privileged operations are validated on the server.
+- Public tracking reference IDs do not bypass authorization.
+- Gemini and Supabase secrets are never exposed in frontend bundles.
+- Validate file types and sizes.
+- Avoid storing unnecessary personal data.
+- Provide a clear privacy notice before submission.
+- Explain that GPS coordinates and complaint photographs may reveal sensitive information.
+- Let citizens understand what data is collected and why.
+
+Never assume that hiding an interface control provides database security.
+
+If any integration is unavailable, explain the missing configuration instead of silently weakening security.
+
+## 14. Citizen complaint history
+
+Build a complete My Complaints page with:
+- Search.
+- Filters.
+- Sort by latest update or submission date.
+- Status badges.
+- Category labels.
+- Location summary.
+- Complaint reference IDs.
+- Last activity.
+- Overdue and escalation indicators.
+- Individual detail pages.
+
+Make each complaint easy to open and understand.
+
+Use plain-language explanations for statuses. Avoid unexplained internal workflow codes.
+
+## 15. Notifications
+
+Build an in-app notification system for:
+- Complaint registration.
+- Department assignment or recorded routing update.
+- Acknowledgement.
+- Status changes.
+- Requests for more information.
+- Overdue status.
+- Escalation.
+- Resolution.
+- Resolution dispute.
+
+Persist notifications in the backend when configured. Link each notification to the relevant complaint.
+
+Do not claim that SMS, WhatsApp, email, or push notifications have been sent unless the corresponding integration is configured and confirms success.
+
+## 16. Demo mode
+
+The application must remain demonstrable even when external credentials are unavailable.
+
+Create a clearly labelled demo mode containing realistic sample complaints and illustrative timeline events.
+
+Include:
+- Sample citizen account or demo entry path.
+- Sample complaint records.
+- Example pothole, garbage, drainage, and streetlight reports.
+- Example AI classification results.
+- Example overdue complaint.
+- Example recorded escalation.
+- Example resolved complaint and citizen verification.
+
+Clearly distinguish demo data from real submissions.
+
+Allow judges to experience the workflow without depending on a live municipal integration.
+
+Do not present simulated AI responses as real Gemini output. Do not claim sample escalations were sent to actual authorities.
+
+Where practical, provide a reset-demo-data option that only resets demonstration data and never deletes real user records.
+
+## 17. Future department portals
+
+The first release is citizen-facing only. Do not build a large, unfinished officer portal now.
+
+However, prepare the architecture for future role-based portals:
+- Department officer.
+- Supervising officer.
+- Municipal administrator.
+
+Use a role-aware authorization design and a department assignment model that can be extended later.
+
+In the future, authorized officers should be able to acknowledge complaints, update progress, request information, submit resolution evidence, and escalate cases.
+
+Supervisors should be able to review overdue complaints and escalation history.
+
+Administrators should manage categories, departments, routing rules, and deadlines.
+
+Do not allow citizens to assign themselves elevated roles. Role changes must be controlled by a trusted administrative process.
+
+Keep citizen operations separate from future privileged officer operations.
+
+## 18. Code quality and accessibility
+
+Use reusable components and typed data models.
+
+Separate:
+- UI components.
+- Authentication.
+- Database access.
+- AI analysis.
+- Complaint validation.
+- Department routing.
+- Escalation logic.
+- Audit event creation.
+- Language translations.
+
+Implement loading, empty, success, and error states.
+
+Prevent duplicate submissions. Handle network failures and expired sessions gracefully.
+
+Use semantic HTML, accessible labels, keyboard navigation, appropriate focus states, and readable contrast.
+
+Ensure that a citizen can complete a report on a small phone screen without horizontal scrolling.
+
+## 19. Acceptance tests
+
+Before declaring the build complete, verify:
+
+1. A new citizen can sign up and log in when Supabase is configured.
+2. Unauthenticated users cannot access protected complaint history.
+3. The interface switches correctly among Marathi, Hindi, and English.
+4. A citizen can capture or upload a photograph and preview it.
+5. GPS works when permission is granted, and manual location entry works when it is not.
+6. Gemini analyzes both image and description when configured.
+7. AI suggestions can be corrected by the citizen.
+8. A complaint is not submitted until the citizen presses Submit.
+9. A successful submission creates a persisted complaint and audit event.
+10. Failed submissions do not display a false success message.
+11. Citizens cannot access other users' private complaints or attachments.
+12. Tracking displays the actual persisted complaint events.
+13. Overdue eligibility follows configured deadlines.
+14. Escalation actions record the reason and audit event.
+15. Resolution verification and dispute workflows work.
+16. Demo data is clearly labelled.
+17. Dashboard elements and tracking states remain consistent with the database.
+18. The application is responsive and accessible.
+19. No secrets are exposed in client-side code.
+20. The project builds without compilation errors and the main flows are tested.
+
+## 20. Implementation instructions
+
+Work in stages, but produce the complete working citizen-facing application.
+
+Stage 1: Inspect the environment and establish the application structure.
+
+Stage 2: Implement the responsive interface, navigation, multilingual translations, and accessible components.
+
+Stage 3: Implement authentication, database schema, and secure Supabase access.
+
+Stage 4: Build photo capture, GPS, AI analysis, category confirmation, and complaint submission.
+
+Stage 5: Build tracking, audit events, escalation, notifications, and resolution verification.
+
+Stage 6: Add demo data and graceful integration fallbacks.
+
+Stage 7: Run the application, inspect the preview, test the main user journeys, and fix actual errors.
+
+Do not stop after building the landing page or dashboard.
+
+Prioritize the end-to-end citizen journey and security over decorative features. If a capability depends on credentials or external services, identify the dependency clearly and provide a working demo alternative without misrepresenting its behavior.
+
+At completion, provide:
+- A summary of implemented features.
+- Supabase setup instructions.
+- SQL migration instructions.
+- Required environment variable names without real secret values.
+- Instructions for configuring secure Gemini access.
+- Any features that remain simulated.
+- A concise deployment checklist.
+
+The result should feel like a trustworthy, thoughtfully designed civic service that a real citizen could understand and use, with a solid technical foundation for future department portals.
